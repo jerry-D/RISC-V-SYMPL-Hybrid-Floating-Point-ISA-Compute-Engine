@@ -1,5 +1,5 @@
 ![](https://github.com/jerry-D/RISC-V-SYMPL-Hybrid-Floating-Point-ISA-Compute-Engine/blob/master/RISC_V_SYMPL_logo_med.png)
-##New hybrid ISA genetically splices the instruction pipeline of a RISC-V to the instruction pipelines of one or more SYMPL Compute Engines, giving you the best of both worlds in a single package.
+# New hybrid ISA genetically splices the instruction pipeline of a RISC-V to the instruction pipelines of one or more SYMPL Compute Engines, giving you the best of both worlds in a single package.
 
 (December 30, 2019) They said it couldn't be done.  Written entirely in Verilog RTL, this new RISC-V/SYMPL Compute Engine genetically splices the instruction pipeline of a RISC-V RV32I or RV64I to the instruction pipelines of one or more SYMPL universal floating-point Compute Engines to create a very powerful hybrid floating-point ISA.
 
