@@ -1,0 +1,303 @@
+; Cross-32 instruction table for RISC-V-SCE (RV32I_SCE)  
+;
+;// Author:  Jerry D. Harthcock
+;// Version:  1.21  December 30, 2019
+;// Copyright (C) 2019.  All rights reserved.
+;//
+;////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+;//                                                                                                                    //
+;//                                                    Open-Source                                                     //
+;//                            SYMPL 64-Bit Universal Floating-point ISA Compute Engine and                            //
+;//                                   Fused Universal Neural Network (FuNN) eNNgine                                    //
+;//                                    Evaluation and Product Development License                                      //
+;//                                                                                                                    //
+;//                                                                                                                    //
+;// Open-source means:  this source code and this instruction set ("this IP") may be freely downloaded, copied,        //
+;// modified, distributed and used in accordance with the terms and conditons of the licenses provided herein.         //
+;//                                                                                                                    //
+;// Provided that you comply with all the terms and conditions set forth herein, Jerry D. Harthcock ("licensor"),      //
+;// the original author and exclusive copyright owner of this SYMPL 64-Bit Universal Floating-point ISA Compute Engine //
+;// and Fused Universal Neural Network (FuNN) eNNgine, including related development software ("this IP"), hereby      //
+;// grants recipient of this IP ("licensee"), a world-wide, paid-up, non-exclusive license to implement this IP        //
+;// within the programmable fabric of Xilinx Kintex Ultra and Kintex Ultra+ brand FPGAs--only--and used only for the   //
+;// purposes of evaluation, education, and development of end products and related development tools.  Furthermore,    //
+;// limited to the purposes of prototyping, evaluation, characterization and testing of implementations in a hard,     //
+;// custom or semi-custom ASIC, any university or institution of higher education may have their implementation of     //
+;// this IP produced for said limited purposes at any foundary of their choosing provided that such prototypes do      //
+;// not ever wind up in commercial circulation, with this license extending to such foundary and is in connection      //
+;// with said academic pursuit and under the supervision of said university or institution of higher education.        //
+;//                                                                                                                    //
+;// Any copying, distribution, customization, modification, or derivative work of this IP must include an exact copy   //
+;// of this license and original copyright notice at the very top of each source file and any derived netlist, and,    //
+;// in the case of binaries, a printed copy of this license and/or a text format copy in a separate file distributed   //
+;// with said netlists or binary files having the file name, "LICENSE.txt".  You, the licensee, also agree not to      //
+;// remove any copyright notices from any source file covered or distributed under this Evaluation and Product         //
+;// Development License.                                                                                               //
+;//                                                                                                                    //
+;// LICENSOR DOES NOT WARRANT OR GUARANTEE THAT YOUR USE OF THIS IP WILL NOT INFRINGE THE RIGHTS OF OTHERS OR          //
+;// THAT IT IS SUITABLE OR FIT FOR ANY PURPOSE AND THAT YOU, THE LICENSEE, AGREE TO HOLD LICENSOR HARMLESS FROM        //
+;// ANY CLAIM BROUGHT BY YOU OR ANY THIRD PARTY FOR YOUR SUCH USE.                                                     //
+;//                                                                                                                    //
+;// Licensor reserves all his rights, including, but in no way limited to, the right to change or modify the terms     //
+;// and conditions of this Evaluation and Product Development License anytime without notice of any kind to anyone.    //
+;// By using this IP for any purpose, licensee agrees to all the terms and conditions set forth in this Evaluation     //
+;// and Product Development License.                                                                                   //
+;//                                                                                                                    //
+;// This Evaluation and Product Development License does not include the right to sell products that incorporate       //
+;// this IP or any IP derived from this IP. If you would like to obtain such a license, please contact Licensor.       //
+;//                                                                                                                    //
+;// Licensor can be contacted at:  SYMPL.gpu@gmail.com or Jerry.Harthcock@gmail.com                                    //
+;//                                                                                                                    //
+;////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+;
+
+;---------------------------
+;Operand definition section
+;---------------------------
+
+; 3322222222221111111111
+; 10987654321098765432109876543210
+; ||||||||||||||||||||||||||||||||
+; ||||||||||1111111111222222222233                       
+; 01234567890123456789012345678901
+
+*
+;NUM	START	LENGTH   EXP    LOW    HIGH     ;COMMENT
+1,       12,       5,     #,     0,    0x1F     ;rs1 (source register 1)
+2,        7,       5,     #,     0,    0x1F     ;rs2 (source register 2)
+3,	     20,	   5,     #,     0,    0x1F     ;rd (destination register)
+4,	      0,      20,     #,     0,    0x000FFFFF  ;#20-bit un-signed immediate
+;5,        0,      12,     #, -2048,    2047     ;12-bit sign-extended offset
+5,        0,      12,     #,     0,    0xFFF     ;12-bit sign-extended offset
+6,        0,      32,     {{# & 0x00000FE0} << 20} | {{# & 0x0000001F} << 7}, -2048, 2047 ;store (source destination) immediate offset
+7,        0,       8,     #,     0,    0xFF     ;FENCE
+8,        0,      32,     {{{#-$} & 0x00001000} << 19} | {{{#-$} & 0x000007E0} << 20} | {{{#-$} & 0x0000001E} << 7} | {{{#-$} & 0x00000800} >> 4}, -4096, 4095 ;branch immediate offset
+9,        0,      32,     {{# & 0x00100000} << 11} | {{# & 0x000007FE} << 20} | {{# & 0x00000800} << 9} | {# & 0x000FF000}, -8192, 8191 ;JAL
+10,       0,      32,     {# << 15} | {# << 7}, 0, 0x1F  ;addi 1/-1 (INCR/DECR alias)  
+
+;-------------------------
+;addressing modes section
+;-------------------------
+*
+1, x{3},{4}^00000000:        ;LUI, AUIPC
+2, x{3},{5}(x{1})^00000000:  ;loads
+3, {6}(x{1}),x{2}^00000000:  ;stores
+4, x{3},x{1},{2}^00000000:   ;shifts
+5, x{3},x{1},x{2}^00000000:  ;ALU ops
+6, {7}^00000000:             ;FENCE
+7, x{3}^00000000:            ;RDCYCLE etc
+8, x{1},x{2},{8}^00000000:   ;branches  
+9, x{3},{9}^00000000:        ;JAL
+10, x{3},x{1},{5}^00000000:  ;immediate ALU ops
+11, x{3},x{1}^00000000:      ;immediate ALU ops (MV, SLTIU alias with fixed immediate)
+12, x{3},x{2}^00000000:      ;ALU ops (SNEZ alias with x0 fixed for rs1 position)
+13, {9}^00000000:            ;JAL using x0 as rd (pc is not saved, ie, J alias)
+14, x{10}^00000000:          ;immediate ALU ops (addi 1/-1 to specified register for INCR/DECR alias)
+15, x{3},{5}^00000000:       ;addi rd, x0, immediate (MVI) move immediate to rd
+16, x{1},{8}^00000000:       ;rs1 is compared to x0 and branches according to the original opcode (BNZ and BZ alias)
+17, {8}^00000000:            ;x0 is compared to itself and a branch is always taken (branch always, BRA, alias) 
+
+;---------------------------
+;Mnemonic Definition section
+;---------------------------
+*
+LUI   |1^00000037:         ;U     rd,imm          0000 0000 0000 0000 0000 0000 0011 0111  
+AUIPC |1^00000017:         ;U     rd,imm          0000 0000 0000 0000 0000 0000 0001 0111  
+JAL   |9^0000006F:         ;UJ    rd,imm          0000 0000 0000 0000 0000 0000 0110 1111  
+JALR  |2^00000067:         ;I     rd,rs1,imm      0000 0000 0000 0000 0000 0000 0110 0111  
+BEQ   |8^00000063:         ;SB    rs1,rs2,imm     0000 0000 0000 0000 0000 0000 0110 0011  
+BNE   |8^00001063:         ;SB    rs1,rs2,imm     0000 0000 0000 0000 0001 0000 0110 0011  
+BLT   |8^00004063:         ;SB    rs1,rs2,imm     0000 0000 0000 0000 0100 0000 0110 0011  
+BGE   |8^00005063:         ;SB    rs1,rs2,imm     0000 0000 0000 0000 0101 0000 0110 0011  
+BLTU  |8^00006063:         ;SB    rs1,rs2,imm     0000 0000 0000 0000 0110 0000 0110 0011  
+BGEU  |8^00007063:         ;SB    rs1,rs2,imm     0000 0000 0000 0000 0111 0000 0110 0011  
+LB    |2^00000003:         ;I     rd,rs1,imm      0000 0000 0000 0000 0000 0000 0000 0011  
+LH    |2^00001003:         ;I     rd,rs1,imm      0000 0000 0000 0000 0001 0000 0000 0011  
+LW    |2^00002003:         ;I     rd,rs1,imm      0000 0000 0000 0000 0010 0000 0000 0011  
+LBU   |2^00004003:         ;I     rd,rs1,imm      0000 0000 0000 0000 0100 0000 0000 0011  
+LHU   |2^00005003:         ;I     rd,rs1,imm      0000 0000 0000 0000 0101 0000 0000 0011  
+SB    |3^00000023:         ;S     rs1,rs2,imm     0000 0000 0000 0000 0000 0000 0010 0011  
+SH    |3^00001023:         ;S     rs1,rs2,imm     0000 0000 0000 0000 0001 0000 0010 0011  
+SW    |3^00002023:         ;S     rs1,rs2,imm     0000 0000 0000 0000 0010 0000 0010 0011  
+ADDI  |10^00000013:        ;I     rd,rs1,imm      0000 0000 0000 0000 0000 0000 0001 0011  
+SLTI  |10^00002013:        ;I     rd,rs1,imm      0000 0000 0000 0000 0010 0000 0001 0011  
+SLTIU |10^00003013:        ;I     rd,rs1,imm      0000 0000 0000 0000 0011 0000 0001 0011  
+XORI  |10^00004013:        ;I     rd,rs1,imm      0000 0000 0000 0000 0100 0000 0001 0011  
+ORI   |10^00006013:        ;I     rd,rs1,imm      0000 0000 0000 0000 0110 0000 0001 0011  
+ANDI  |10^00007013:        ;I     rd,rs1,imm      0000 0000 0000 0000 0111 0000 0001 0011  
+SLLI  |4^00001013:         ;RSH   rd,rs1,shamt    0000 0000 0000 0000 0001 0000 0001 0011  
+SRLI  |4^00005013:         ;RSH   rd,rs1,shamt    0000 0000 0000 0000 0101 0000 0001 0011  
+SRAI  |4^40005013:         ;RSH   rd,rs1,shamt    0100 0000 0000 0000 0101 0000 0001 0011  
+ADD   |5^00000033:         ;R     rd,rs1,rs2      0000 0000 0000 0000 0000 0000 0011 0011  
+SUB   |5^40000033:         ;R     rd,rs1,rs2      0100 0000 0000 0000 0000 0000 0011 0011  
+SLL   |5^00001033:         ;R     rd,rs1,rs2      0000 0000 0000 0000 0001 0000 0011 0011  
+SLT   |5^00002033:         ;R     rd,rs1,rs2      0000 0000 0000 0000 0010 0000 0011 0011  
+SLTU  |5^00003033:         ;R     rd,rs1,rs2      0000 0000 0000 0000 0011 0000 0011 0011  
+XOR   |5^00004033:         ;R     rd,rs1,rs2      0000 0000 0000 0000 0100 0000 0011 0011  
+SRL   |5^00005033:         ;R     rd,rs1,rs2      0000 0000 0000 0000 0101 0000 0011 0011  
+SRA   |5^40005033:         ;R     rd,rs1,rs2      0100 0000 0000 0000 0101 0000 0011 0011  
+OR    |5^00006033:         ;R     rd,rs1,rs2      0000 0000 0000 0000 0110 0000 0011 0011  
+AND   |5^00007033:         ;R     rd,rs1,rs2      0000 0000 0000 0000 0111 0000 0011 0011
+FENCE         |6^0000000F: ;F                     0000 0000 0000 0000 0000 0000 0000 1111  
+FENCE.I         ^0000100F: ;                      0000 0000 0000 0000 0001 0000 0000 1111  
+SCALL           ^00000073: ;                      0000 0000 0000 0000 0000 0000 0111 0011  
+SBREAK          ^00100073: ;                      0000 0000 0001 0000 0000 0000 0111 0011  
+RDCYCLE       |7^C0002073: ;RD    rd              1100 0000 0000 0000 0010 0000 0111 0011  
+RDCYCLEH      |7^C8002073: ;RD    rd              1100 1000 0000 0000 0010 0000 0111 0011  
+RDTIME        |7^C0102073: ;RD    rd              1100 0000 0001 0000 0010 0000 0111 0011  
+RDTIMEH       |7^C8102073: ;RD    rd              1100 1000 0001 0000 0010 0000 0111 0011  
+RDINSTRET     |7^C0202073: ;RD    rd              1100 0000 0010 0000 0010 0000 0111 0011  
+RDINSTRETH    |7^C8202073: ;RD    rd              1100 1000 0010 0000 0010 0000 0111 0011
+;--------------------------------------------------------------------------------------------------------------------------------
+;RISC-V-SYMPL Compute Engine (SCE) re-purposed hybrid instructions (aliases) Note: the SCE simultaneously executes these instructions when fetched by RISC-V
+;--------------------------------------------------------------------------------------------------------------------------------
+XLQU         ^0000C093: ;XORI     x1 ,x1 ,#0      0000 0000 0000 0000 1100 0000 1001 0011 ; load quad-word (unsigned) from SCE into RISC-V register-pair {X31, X30} RV64I-only
+XLDU         ^00014113: ;XORI     x2 ,x2 ,#0      0000 0000 0000 0001 0100 0001 0001 0011 ; load double-word (unsigned) from SCE into RISC-V register-pair {X31, X30} 
+XLWU         ^0001C193: ;XORI     x3 ,x3 ,#0      0000 0000 0000 0001 1100 0001 1001 0011 ; load word (unsigned) from SCE into RISC-V register X30
+XLHU         ^00024213: ;XORI     x4 ,x4 ,#0      0000 0000 0000 0010 0100 0010 0001 0011 ; load half-word (unsigned) from SEC into RISC-V register X30
+XLBU         ^0002C293: ;XORI     x5 ,x5 ,#0      0000 0000 0000 0010 1100 0010 1001 0011 ; load byte (unsigned) from SCE into RISC-V register X30
+XSQ          ^00034313: ;XORI     x6 ,x6 ,#0      0000 0000 0000 0011 0100 0011 0001 0011 ; store 128-bit RISC-V register-pair {X31, x30} into SCE memory/register (RV64I-only)
+XSD          ^0003C393: ;XORI     x7 ,x7 ,#0      0000 0000 0000 0011 1100 0011 1001 0011 ; store 64-bit RISC-V register-pair {X31, x30} into SCE memory/register 
+XSW          ^00044413: ;XORI     x8 ,x8 ,#0      0000 0000 0000 0100 0100 0100 0001 0011 ; store 32-bit RISC-V register x30 into SCE memory/register
+XSH          ^0004C493: ;XORI     x9 ,x9 ,#0      0000 0000 0000 0100 1100 0100 1001 0011 ; store 16-bit RISC-V register x30 into SCE memory/register
+XSB          ^00054513: ;XORI     x10,x10,#0      0000 0000 0000 0101 0100 0101 0001 0011 ; store 8-bit RISC-V register x30 into SCE memory/register
+XPUSH        ^0005C593: ;XORI     x11,x11,#0      0000 0000 0000 0101 1100 0101 1001 0011 ; copy location from RISC-V memory into SCE memory
+XPULL        ^00064613: ;XORI     x12,x12,#0      0000 0000 0000 0110 0100 0110 0001 0011 ; copy location from SCE memory into RISC-V memory
+XPUSHD       ^0006C693: ;XORI     x13,x13,#0      0000 0000 0000 0110 1100 0110 1001 0011 ; copy dual operands from RISC-V three-port memory to SCE dual-operand operator
+XFRCBRK      ^00074713: ;XORI     x14,x14,#0      0000 0000 0000 0111 0100 0111 0001 0011 ; force a hardware break on SCE(s) specified by RISC-V register 28
+XCLRBRK      ^0007C793: ;XORI     x15,x15,#0      0000 0000 0000 0111 1100 0111 1001 0011 ; clear hardware break of SCE(s) specified by RISC-V register 28
+XFRCRST      ^00084813: ;XORI     x16,x16,#0      0000 0000 0000 1000 0100 1000 0001 0011 ; force a hardware reset on SCE(s) specified by RISC-V register 28
+XCLRRST      ^0008C893: ;XORI     x17,x17,#0      0000 0000 0000 1000 1100 1000 1001 0011 ; clear hardware reset of SCE(s) specified by RISC-V register 28
+XSSTEP       ^00094913: ;XORI     x18,x18,#0      0000 0000 0000 1001 0100 1001 0001 0011 ; single-step SCE specified by RISC-V register 28
+XSTATUS      ^0009C993: ;XORI     x19,x19,#0      0000 0000 0000 1001 1100 1001 1001 0011 ; copy SCE status specified by RISC-V register 28 into RISC-V register-pair {31: 30}
+;--------------------------------------------- unsanctioned Aliases ------------------------------------------------------------------------------------
+;alias instruction          RISC-V original                                                 alias usage examples
+;-------------------------------------------------------------------------------------------------------------------------------------------------------
+NOP     ^00000013:         ;    addi rd, rs1, 0   0000 0000 0000 0000 0000 0000 0001 0011   NOP             ;incr PC x 1
+MV   |11^00000013:         ;    addi rd, rs1, 0   0000 0000 0000 0000 0000 0000 0001 0011   MV    x1, x2    ;copy x2 into x1
+MVI  |15^00000013:         ;    addi rd, x0, imm  0000 0000 0000 0000 0000 0000 0001 0011   MVI   x1, 55    ;move immediate value into x1
+SEQZ |11^00103013:         ;    sltiu rd, rs1, 1  0000 0000 0001 0000 0011 0000 0001 0011   SEQZ  x2, x4    ;if rs1==0, rd is set to 1, else rd cleared to 0                                        
+NOT  |11^FFF04013:         ;    xori rd, rs1, -1  1111 1111 1111 0000 0100 0000 0001 0011   NOT   x3, x4    ;x3 = ^x4
+SNEZ |12^00003033:         ;    sltu rd, x0, rs2  0000 0000 0000 0000 0011 0000 0011 0011   SNEZ  x1, x2    ;if x2 != 0, rd is to 1, else rd cleared to 0
+J    |13^0000006F:         ;UJ  jal x0,imm        0000 0000 0000 0000 0000 0000 0110 1111   J     loop      ;plain jump with no save of pc
+INCR |14^00100013:         ;    addi rd, rs1, 1   0000 0000 0001 0000 0000 0000 0001 0011   INCR  x1        ;add 1 to rd
+DECR |14^FFF00013:         ;    addi rd, rs1, -1  1111 1111 1111 0000 0000 0000 0001 0011   DECR  x1        ;sub 1 from rd
+BNZ  |16^00001063:         ;SB  rs1,rs2,imm       0000 0000 0000 0000 0001 0000 0110 0011   BNZ   x1, loop  ;rs1 is compared to x0 and branch is taken if not equal
+BZ   |16^00000063:         ;SB  rs1,rs2,imm       0000 0000 0000 0000 0000 0000 0110 0011   BZ    x1, loop  ;rs1 is compared to x0 and branch is taken if equal
+BRA  |17^00000063:         ;SB  rs1,rs2,imm       0000 0000 0000 0000 0000 0000 0110 0011   BRA   loop      ;x0 is compared to itself and branch is always taken
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                           
+                                                           
+
+
+
+
+
+
+
+
+
+                                                          
+                                                           
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
