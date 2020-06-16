@@ -15,7 +15,7 @@ https://github.com/jerry-D/RISC-V-SYMPL-Hybrid-Floating-Point-ISA-Compute-Engine
 
 Here is a .pdf information sheet on the SYMPL Fused Neural Network (FuNN) eNNgine employed by the new hybrid ISA:
 
-https://github.com/jerry-D/RISC-V-SYMPL-Hybrid-Floating-Point-ISA-Compute-Engine/blob/master/SYMPL_neuron16c.pdf
+https://github.com/jerry-D/RISC-V-SYMPL-Hybrid-Floating-Point-ISA-Compute-Engine/blob/master/SYMPL_neuron16b_large.pdf
 
 Here is a detailed description of the SYMPL floating-point compute engine itself:
 
